@@ -1,8 +1,12 @@
+import pandas as pd
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from dash.dependencies import Input, Output
 
 import utils.dash_reuable_components as drc
+from utils.read_datasets import read_datasets
 
 app = dash.Dash(__name__)
 server = app.server
@@ -77,9 +81,6 @@ app.layout = html.Div(children=[
                         drc.NamedDropdown(
                             name='X-axis',
                             id='graph-x-axis',
-                            options=[
-                                ''
-                            ],
                             clearable=False,
                             searchable=False,
                             value=''
@@ -87,11 +88,8 @@ app.layout = html.Div(children=[
                         drc.NamedDropdown(
                             name='Y-axis',
                             id='graph-y-axis',
-                            options=[
-                                ''
-                            ],
                             clearable=False,
-                            searchable=False,
+                            # searchable=False,
                             value=''
                         )
                     ])
@@ -100,6 +98,24 @@ app.layout = html.Div(children=[
         ])
     ])
 ])
+
+@app.callback(
+    Output('graph-x-axis', 'options'),
+    [Input('dropdown-select-dataset', 'value')]
+)
+def update_dropdown_xaix(ds_name):
+    ds_df = read_datasets(ds_name)
+    label = [{'label': i, 'value': i} for i in ds_df.columns]
+    return [{'label': i, 'value': i} for i in ds_df.columns]
+
+@app.callback(
+    Output('graph-y-axis', 'options'),
+    [Input('dropdown-select-dataset', 'value')]
+)
+def update_dropdown_yaix(ds_name):
+    ds_df = read_datasets(ds_name)
+    label = [{'label': i, 'value': i} for i in ds_df.columns]
+    return [{'label': i, 'value': i} for i in ds_df.columns]
 
 external_css = [
     # Normalize the CSS
