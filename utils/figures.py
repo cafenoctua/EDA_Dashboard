@@ -75,15 +75,6 @@ def serve_dist_plot(ds_df,
     # Colorscale
     bright_cscale = [[0, '#FF0000'], [1, '#0000FF']]
 
-    figure =ff.create_distplot([ds_df], [ds_df_col_name])
-
-    # layout = go.Layout(
-    #     hovermode='closest',
-    #     legend=dict(x=0, y=-0.01, orientation="h"),
-    #     margin=dict(l=100, r=100, t=100, b=100),
-    # )
-
-    # data = [trace]
-    # figure = go.Figure(data=data, layout=layout)
+    figure = ff.create_distplot([ds_df], [ds_df_col_name])
 
     return figure
