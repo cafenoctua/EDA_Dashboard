@@ -6,11 +6,12 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 import utils.dash_reuable_components as drc
-from utils.read_datasets import read_datasets
+from utils.read_datasets import read_sklearn_datasets, read_csv_datasets
 from utils.figures import serve_scatter_plot
 
 app = dash.Dash(__name__)
 server = app.server
+read_datasets = read_sklearn_datasets
 
 app.layout = html.Div(children=[
     html.Div(className="banner", children=[
@@ -51,34 +52,37 @@ app.layout = html.Div(children=[
                 },
                 children=[
                     drc.Card([
-                        drc.Card([
-                            drc.NamedDropdown(
-                                name='Select Dataset',
-                                id='dropdown-select-dataset',
-                                options=[
-                                    {'label': 'Iris', 'value': 'iris'},
-                                    {'label': 'Boston house-prices', 'value': 'boston house-prices'},
-                                ],
-                                clearable=False,
-                                searchable=False,
-                                value='iris'
-                            ),
-                        ]),
-                        drc.Card([
-                            drc.NamedDropdown(
-                                name='Select Graph',
-                                id='dropdown-select-graph',
-                                options=[
-                                    {'label': 'Scatter', 'value': 'scatter'},
-                                    {'label': 'Histogram', 'value': 'histogram'},
-                                ],
-                                clearable=False,
-                                searchable=False,
-                                value='scatter'
-                            ),
-                        ])
+                        drc.NamedDropdown(
+                            name='Select Data Source',
+                            id='dropdown-select-data-source',
+                            options=[
+                                {'label': 'Sklearn', 'value': 'sklearn'},
+                                {'label': 'CSV', 'value': 'csv'},
+                            ],
+                            clearable=False,
+                            searchable=False,
+                            value='sklearn'
+                        ),
+                        drc.NamedDropdown(
+                            name='Select Dataset',
+                            id='dropdown-select-dataset',
+                            clearable=False,
+                            searchable=False,
+                            value='iris'
+                        ),
                     ]),
                     drc.Card([
+                        drc.NamedDropdown(
+                            name='Select Graph',
+                            id='dropdown-select-graph',
+                            options=[
+                                {'label': 'Scatter', 'value': 'scatter'},
+                                {'label': 'Histgram', 'value': 'histgram'}
+                            ],
+                            clearable=False,
+                            searchable=False,
+                            value='scatter'
+                        ),
                         drc.NamedDropdown(
                             name='X-axis',
                             id='graph-x-axis',
@@ -100,12 +104,34 @@ app.layout = html.Div(children=[
     ])
 ])
 
-# Coef component
+# Setting component
+@app.callback(
+    Output('dropdown-select-dataset', 'options'),
+    [Input('dropdown-select-data-source', 'value')]
+)
+def change_datasource(data_source):
+    global read_datasets
+    if data_source == 'sklearn':
+        read_datasets = read_sklearn_datasets
+        dataset_names=[
+            {'label': 'Iris', 'value': 'iris'},
+            {'label': 'Boston House-Prices', 'value': 'boston house-prices'},
+        ]
+    elif data_source == 'csv':
+        read_datasets = read_csv_datasets
+        dataset_names=[
+            {'label': 'Titanic_train', 'value': 'titanic_train'},
+            {'label': 'Titanic_test', 'value': 'titanic_test'},
+        ]
+    
+    return dataset_names
+    
 @app.callback(
     Output('graph-x-axis', 'options'),
     [Input('dropdown-select-dataset', 'value')]
 )
 def update_dropdown_xaix(ds_name):
+    global read_datasets
     ds_df = read_datasets(ds_name)
     label = [{'label': i, 'value': i} for i in ds_df.columns]
     return [{'label': i, 'value': i} for i in ds_df.columns]
@@ -115,11 +141,12 @@ def update_dropdown_xaix(ds_name):
     [Input('dropdown-select-dataset', 'value')]
 )
 def update_dropdown_yaix(ds_name):
+    global read_datasets
     ds_df = read_datasets(ds_name)
     label = [{'label': i, 'value': i} for i in ds_df.columns]
     return [{'label': i, 'value': i} for i in ds_df.columns]
 
-# plot
+# Plot
 @app.callback(Output('div-graphs', 'children'),
             [Input('dropdown-select-dataset', 'value'),
             Input('graph-x-axis', 'value'),
@@ -130,6 +157,7 @@ def update_graph(ds_name,
     if len(x_axis) == 0 or len(y_axis) == 0:
         return None
 
+    global read_datasets
     ds_df = read_datasets(ds_name)
 
     scatter_figure = serve_scatter_plot(ds_df[x_axis], ds_df[y_axis], x_axis, y_axis)
@@ -154,8 +182,6 @@ def update_graph(ds_name,
                 )
             ])
     ]
-
-
 
 # Style sheet
 external_css = [
