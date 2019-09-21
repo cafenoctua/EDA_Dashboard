@@ -7,7 +7,7 @@ from dash.dependencies import Input, Output
 
 import utils.dash_reuable_components as drc
 from utils.read_datasets import read_sklearn_datasets, read_csv_datasets
-from utils.figures import serve_scatter_plot, serve_table_data
+from utils import figures
 
 app = dash.Dash(__name__)
 server = app.server
@@ -77,7 +77,8 @@ app.layout = html.Div(children=[
                             id='dropdown-select-graph',
                             options=[
                                 {'label': 'Scatter', 'value': 'scatter'},
-                                {'label': 'Table', 'value': 'table'}
+                                {'label': 'Table', 'value': 'table'},
+                                {'label': 'Distribution', 'value': 'distribution'}
                             ],
                             clearable=False,
                             searchable=False,
@@ -146,6 +147,48 @@ def update_dropdown_yaix(ds_name):
     label = [{'label': i, 'value': i} for i in ds_df.columns]
     return [{'label': i, 'value': i} for i in ds_df.columns]
 
+@app.callback(
+    Output('graph-x-axis', 'disabled'),
+    [Input('dropdown-select-graph', 'value')]
+)
+def disable_dropdown_xaix(graph_name):
+    if graph_name == 'table':
+        return True
+    else:
+        return False
+        
+@app.callback(
+    Output('graph-y-axis', 'disabled'),
+    [Input('dropdown-select-graph', 'value')]
+)
+def disable_dropdown_yaix(graph_name):
+    if graph_name == 'scatter':
+        return False
+    else:
+        return True
+
+@app.callback(
+    Output('graph-x-axis', 'value'),
+    [Input('dropdown-select-data-source', 'value'),
+    Input('dropdown-select-dataset', 'value'),
+    Input('dropdown-select-graph', 'value')]
+)
+def reset_dropdown_xaix(data_source,
+                        dataset,
+                        graph_name):
+    return ''
+
+@app.callback(
+    Output('graph-y-axis', 'value'),
+    [Input('dropdown-select-data-source', 'value'),
+    Input('dropdown-select-dataset', 'value'),
+    Input('dropdown-select-graph', 'value')]
+)
+def reset_dropdown_yaix(data_source,
+                        dataset,
+                        graph_name):
+    return ''
+
 # Plot
 @app.callback(Output('div-graphs', 'children'),
             [Input('dropdown-select-dataset', 'value'),
@@ -164,9 +207,15 @@ def update_graph(ds_name,
         if len(x_axis) == 0 or len(y_axis) == 0:
             return None
         else:
-            figure = serve_scatter_plot(ds_df[x_axis], ds_df[y_axis], x_axis, y_axis)
+            figure = figures.serve_scatter_plot(ds_df[x_axis], ds_df[y_axis], x_axis, y_axis)
     elif graph_type == 'table':
-        figure = serve_table_data(ds_df)
+        figure = figures.serve_table_data(ds_df)
+
+    elif graph_type == 'distribution':
+        if len(x_axis) == 0:
+            return None
+        else:
+            figure = figures.serve_dist_plot(ds_df[x_axis], x_axis)
 
     return [
         html.Div(
