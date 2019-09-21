@@ -7,7 +7,7 @@ from dash.dependencies import Input, Output
 
 import utils.dash_reuable_components as drc
 from utils.read_datasets import read_sklearn_datasets, read_csv_datasets
-from utils.figures import serve_scatter_plot
+from utils.figures import serve_scatter_plot, serve_table_data
 
 app = dash.Dash(__name__)
 server = app.server
@@ -77,7 +77,7 @@ app.layout = html.Div(children=[
                             id='dropdown-select-graph',
                             options=[
                                 {'label': 'Scatter', 'value': 'scatter'},
-                                {'label': 'Histgram', 'value': 'histgram'}
+                                {'label': 'Table', 'value': 'table'}
                             ],
                             clearable=False,
                             searchable=False,
@@ -149,18 +149,24 @@ def update_dropdown_yaix(ds_name):
 # Plot
 @app.callback(Output('div-graphs', 'children'),
             [Input('dropdown-select-dataset', 'value'),
+            Input('dropdown-select-graph', 'value'),
             Input('graph-x-axis', 'value'),
             Input('graph-y-axis', 'value'),])
 def update_graph(ds_name,
+                graph_type,
                 x_axis,
                 y_axis):
-    if len(x_axis) == 0 or len(y_axis) == 0:
-        return None
-
+    
     global read_datasets
     ds_df = read_datasets(ds_name)
 
-    scatter_figure = serve_scatter_plot(ds_df[x_axis], ds_df[y_axis], x_axis, y_axis)
+    if graph_type == 'scatter':
+        if len(x_axis) == 0 or len(y_axis) == 0:
+            return None
+        else:
+            figure = serve_scatter_plot(ds_df[x_axis], ds_df[y_axis], x_axis, y_axis)
+    elif graph_type == 'table':
+        figure = serve_table_data(ds_df)
 
     return [
         html.Div(
@@ -177,7 +183,7 @@ def update_graph(ds_name,
             children=[
                 dcc.Graph(
                     id='graph',
-                    figure=scatter_figure,
+                    figure=figure,
                     style={'height': 'calc(100vh - 90px)'}
                 )
             ])
