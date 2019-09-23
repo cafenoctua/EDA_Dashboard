@@ -68,7 +68,6 @@ app.layout = html.Div(children=[
                             id='dropdown-select-dataset',
                             clearable=False,
                             searchable=False,
-                            value='iris'
                         ),
                     ]),
                     drc.Card([
@@ -126,7 +125,19 @@ def change_datasource(data_source):
         ]
     
     return dataset_names
-    
+
+# Setting component
+@app.callback(
+    Output('dropdown-select-dataset', 'value'),
+    [Input('dropdown-select-data-source', 'value')]
+)
+def change_datasource(data_source):
+    global read_datasets
+    if data_source == 'sklearn':
+        return 'iris'
+    elif data_source == 'csv':
+        return 'titanic_train'
+
 @app.callback(
     Output('graph-x-axis', 'options'),
     [Input('dropdown-select-dataset', 'value')]
