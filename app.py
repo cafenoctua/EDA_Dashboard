@@ -25,10 +25,10 @@ app.layout = html.Div(children=[
                 }
             )),
 
-            # html.A(
-            #     html.Img(src="https://s3-us-west-1.amazonaws.com/plotly-tutorials/logo/new-branding/dash-logo-by-plotly-stripe-inverted.png"),
-            #     href='https://plot.ly/products/dash/'
-            # )
+            html.A(
+                html.Img(src="https://s3-us-west-1.amazonaws.com/plotly-tutorials/logo/new-branding/dash-logo-by-plotly-stripe-inverted.png"),
+                href='https://plot.ly/products/dash/'
+            )
         ]),
     ]),
 
