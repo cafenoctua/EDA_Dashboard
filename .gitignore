@@ -1,3 +1,5 @@
 .vscode
 *.pyc
 .DS_Store
+Titanic_Dashboard
+.python-version
