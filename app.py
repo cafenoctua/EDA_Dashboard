@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+from dash.exceptions import PreventUpdate
 
 import utils.dash_reuable_components as drc
 from utils.read_datasets import read_sklearn_datasets, read_csv_datasets
@@ -94,11 +96,33 @@ app.layout = html.Div(children=[
             )
         ]),
         html.Div(
-            id='div-graphs',
-            children=dcc.Graph(
-                id='graph',
-                style={'display': 'none'}
-            )
+            id='graph-space',
+            children=[
+                html.Div(
+                    id='div-graphs1',
+                ),
+                html.Div(
+                    id='div-graphs2',
+                ),
+                # dcc.Graph(
+                #         id='graph1',
+                #         style={'display': 'none'}
+                # )
+                # html.Div(
+                #     id='div-graphs1',
+                #     children=dcc.Graph(
+                #         id='graph1',
+                #         style={'display': 'none'}
+                #     )
+                # ),
+                # html.Div(
+                #     id='div-graphs2',
+                #     children=dcc.Graph(
+                #         id='graph',
+                #         style={'display': 'none'}
+                #     )
+                # ),
+            ]
         ),
     ]),
 ])
@@ -200,7 +224,7 @@ def reset_dropdown_yaix(data_source,
     return ''
 
 # Plot
-@app.callback(Output('div-graphs', 'children'),
+@app.callback(Output('div-graphs1', 'children'),
             [Input('dropdown-select-dataset', 'value'),
             Input('dropdown-select-graph', 'value'),
             Input('graph-x-axis', 'value'),
@@ -215,7 +239,7 @@ def update_graph(ds_name,
 
     if graph_type == 'scatter':
         if len(x_axis) == 0 or len(y_axis) == 0:
-            return None
+            raise PreventUpdate
         else:
             figure = figures.serve_scatter_plot(ds_df[x_axis], ds_df[y_axis], x_axis, y_axis)
     elif graph_type == 'table':
@@ -223,7 +247,7 @@ def update_graph(ds_name,
 
     elif graph_type == 'distribution':
         if len(x_axis) == 0:
-            return None
+            raise PreventUpdate
         else:
             figure = figures.serve_dist_plot(ds_df[x_axis], x_axis)
 
@@ -248,6 +272,53 @@ def update_graph(ds_name,
             ])
     ]
 
+@app.callback(Output('div-graphs2', 'children'),
+            [Input('dropdown-select-dataset', 'value'),
+            Input('dropdown-select-graph', 'value'),
+            Input('graph-x-axis', 'value'),
+            Input('graph-y-axis', 'value'),])
+def update_graph(ds_name,
+                graph_type,
+                x_axis,
+                y_axis):
+    
+    global read_datasets
+    ds_df = read_datasets(ds_name)
+
+    if graph_type == 'scatter':
+        if len(x_axis) == 0 or len(y_axis) == 0:
+            raise PreventUpdate
+        else:
+            figure = figures.serve_scatter_plot(ds_df[x_axis], ds_df[y_axis], x_axis, y_axis)
+    elif graph_type == 'table':
+        figure = figures.serve_table_data(ds_df)
+
+    elif graph_type == 'distribution':
+        if len(x_axis) == 0:
+            raise PreventUpdate
+        else:
+            figure = figures.serve_dist_plot(ds_df[x_axis], x_axis)
+
+    return [
+        html.Div(
+            className='six columns',
+            style={
+                'min-width': '24.5%',
+                'margin-top': '5px',
+                # Remove possibility to select the text for better UX
+                'user-select': 'none',
+                '-moz-user-select': 'none',
+                '-webkit-user-select': 'none',
+                '-ms-user-select': 'none'
+            },
+            children=[
+                dcc.Graph(
+                    id='graph',
+                    figure=figure,
+                    style={'height': 'calc(100vh - 90px)'}
+                )
+            ])
+    ]
 # Style sheet
 external_css = [
     # Normalize the CSS
