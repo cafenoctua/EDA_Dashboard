@@ -47,22 +47,29 @@ app.layout = html.Div(children=[
                 children=[
                     drc.Card([
                         drc.NamedDropdown(
-                            name='Select Data Source',
-                            id='dropdown-select-data-source',
-                            options=[
-                                {'label': 'Sklearn', 'value': 'sklearn'},
-                                {'label': 'CSV', 'value': 'csv'},
-                            ],
-                            clearable=False,
-                            searchable=False,
-                            value='sklearn'
-                        ),
-                        drc.NamedDropdown(
                             name='Select Dataset',
                             id='dropdown-select-dataset',
+                            options=[
+                                {'label': 'Iris', 'value': 'iris'},
+                                {'label': 'Boston House-Prices', 'value': 'boston house-prices'}
+                            ],
+                            value='iris',
                             clearable=False,
                             searchable=False,
                         ),
+                        drc.NamedDropdown(
+                            name='Select Graph',
+                            id='graph-select-update',
+                           options=[
+                                {'label': 1, 'value': 1},
+                                {'label': 2, 'value': 2},
+                                {'label': 3, 'value': 3}
+                            ],
+                            value=1,
+                            clearable=False,
+                            searchable=False,
+                        ),
+                        
                     ]),
                     drc.Card([
                         drc.NamedDropdown(
@@ -75,7 +82,7 @@ app.layout = html.Div(children=[
                             ],
                             clearable=False,
                             searchable=False,
-                            value='scatter'
+                            value='table'
                         ),
                         drc.NamedDropdown(
                             name='X-axis',
@@ -100,9 +107,24 @@ app.layout = html.Div(children=[
             children=[
                 html.Div(
                     id='div-graphs1',
+                    children=dcc.Graph(
+                        id='graph1',
+                        style={'display': 'none'}
+                    )
                 ),
                 html.Div(
                     id='div-graphs2',
+                    children=dcc.Graph(
+                        id='graph2',
+                        style={'display': 'none'}
+                    )
+                ),
+                html.Div(
+                    id='div-graphs3',
+                    children=dcc.Graph(
+                        id='graph3',
+                        style={'display': 'none'}
+                    )
                 ),
                 # dcc.Graph(
                 #         id='graph1',
@@ -127,39 +149,17 @@ app.layout = html.Div(children=[
     ]),
 ])
 
-# Setting component
-@app.callback(
-    Output('dropdown-select-dataset', 'options'),
-    [Input('dropdown-select-data-source', 'value')]
-)
-def change_datasource(data_source):
-    global read_datasets
-    if data_source == 'sklearn':
-        read_datasets = read_sklearn_datasets
-        dataset_names=[
-            {'label': 'Iris', 'value': 'iris'},
-            {'label': 'Boston House-Prices', 'value': 'boston house-prices'},
-        ]
-    elif data_source == 'csv':
-        read_datasets = read_csv_datasets
-        dataset_names=[
-            {'label': 'Titanic_train', 'value': 'titanic_train'},
-            {'label': 'Titanic_test', 'value': 'titanic_test'},
-        ]
-    
-    return dataset_names
+# Style sheet
+external_css = [
+    # Normalize the CSS
+    "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
+    # Fonts
+    "https://fonts.googleapis.com/css?family=Open+Sans|Roboto",
+    "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+]
 
-# Setting component
-@app.callback(
-    Output('dropdown-select-dataset', 'value'),
-    [Input('dropdown-select-data-source', 'value')]
-)
-def change_datasource(data_source):
-    global read_datasets
-    if data_source == 'sklearn':
-        return 'iris'
-    elif data_source == 'csv':
-        return 'titanic_train'
+for css in external_css:
+    app.css.append_css({"external_url": css})
 
 @app.callback(
     Output('graph-x-axis', 'options'),
@@ -203,37 +203,27 @@ def disable_dropdown_yaix(graph_name):
 
 @app.callback(
     Output('graph-x-axis', 'value'),
-    [Input('dropdown-select-data-source', 'value'),
-    Input('dropdown-select-dataset', 'value'),
+    [Input('dropdown-select-dataset', 'value'),
     Input('dropdown-select-graph', 'value')]
 )
-def reset_dropdown_xaix(data_source,
-                        dataset,
+def reset_dropdown_xaix(dataset,
                         graph_name):
     return ''
 
 @app.callback(
     Output('graph-y-axis', 'value'),
-    [Input('dropdown-select-data-source', 'value'),
-    Input('dropdown-select-dataset', 'value'),
+    [Input('dropdown-select-dataset', 'value'),
     Input('dropdown-select-graph', 'value')]
 )
-def reset_dropdown_yaix(data_source,
-                        dataset,
+def reset_dropdown_yaix(dataset,
                         graph_name):
     return ''
 
 # Plot
-@app.callback(Output('div-graphs1', 'children'),
-            [Input('dropdown-select-dataset', 'value'),
-            Input('dropdown-select-graph', 'value'),
-            Input('graph-x-axis', 'value'),
-            Input('graph-y-axis', 'value'),])
-def update_graph(ds_name,
+def update_graph_base(ds_name,
                 graph_type,
                 x_axis,
                 y_axis):
-    
     global read_datasets
     ds_df = read_datasets(ds_name)
 
@@ -271,65 +261,57 @@ def update_graph(ds_name,
                 )
             ])
     ]
+
+@app.callback(Output('div-graphs1', 'children'),
+            [Input('dropdown-select-dataset', 'value'),
+            Input('graph-select-update', 'value'),
+            Input('dropdown-select-graph', 'value'),
+            Input('graph-x-axis', 'value'),
+            Input('graph-y-axis', 'value'),])
+def update_graph_1(ds_name,
+                selgraph,
+                graph_type,
+                x_axis,
+                y_axis):
+    
+    if selgraph == 1:
+        return update_graph_base(ds_name, graph_type, x_axis, y_axis)
+    else:
+        raise PreventUpdate
 
 @app.callback(Output('div-graphs2', 'children'),
             [Input('dropdown-select-dataset', 'value'),
+            Input('graph-select-update', 'value'),
             Input('dropdown-select-graph', 'value'),
             Input('graph-x-axis', 'value'),
             Input('graph-y-axis', 'value'),])
-def update_graph(ds_name,
+def update_graph_2(ds_name,
+                selgraph,
                 graph_type,
                 x_axis,
                 y_axis):
     
-    global read_datasets
-    ds_df = read_datasets(ds_name)
+    if selgraph == 2:
+        return update_graph_base(ds_name, graph_type, x_axis, y_axis)
+    else:
+        raise PreventUpdate
 
-    if graph_type == 'scatter':
-        if len(x_axis) == 0 or len(y_axis) == 0:
-            raise PreventUpdate
-        else:
-            figure = figures.serve_scatter_plot(ds_df[x_axis], ds_df[y_axis], x_axis, y_axis)
-    elif graph_type == 'table':
-        figure = figures.serve_table_data(ds_df)
-
-    elif graph_type == 'distribution':
-        if len(x_axis) == 0:
-            raise PreventUpdate
-        else:
-            figure = figures.serve_dist_plot(ds_df[x_axis], x_axis)
-
-    return [
-        html.Div(
-            className='six columns',
-            style={
-                'min-width': '24.5%',
-                'margin-top': '5px',
-                # Remove possibility to select the text for better UX
-                'user-select': 'none',
-                '-moz-user-select': 'none',
-                '-webkit-user-select': 'none',
-                '-ms-user-select': 'none'
-            },
-            children=[
-                dcc.Graph(
-                    id='graph',
-                    figure=figure,
-                    style={'height': 'calc(100vh - 90px)'}
-                )
-            ])
-    ]
-# Style sheet
-external_css = [
-    # Normalize the CSS
-    "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
-    # Fonts
-    "https://fonts.googleapis.com/css?family=Open+Sans|Roboto",
-    "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
-]
-
-for css in external_css:
-    app.css.append_css({"external_url": css})
+@app.callback(Output('div-graphs3', 'children'),
+            [Input('dropdown-select-dataset', 'value'),
+            Input('graph-select-update', 'value'),
+            Input('dropdown-select-graph', 'value'),
+            Input('graph-x-axis', 'value'),
+            Input('graph-y-axis', 'value'),])
+def update_graph_3(ds_name,
+                selgraph,
+                graph_type,
+                x_axis,
+                y_axis):
+    
+    if selgraph == 3:
+        return update_graph_base(ds_name, graph_type, x_axis, y_axis)
+    else:
+        raise PreventUpdate
 
 if __name__ == '__main__':
      app.run_server(debug=True)
