@@ -35,14 +35,6 @@ app.layout = html.Div(children=[
     html.Div(id='body', className='container scalable', children=[
         html.Div(className='row', children=[
             html.Div(
-                id='div-graphs',
-                children=dcc.Graph(
-                    id='graph',
-                    style={'display': 'none'}
-                )
-            ),
-
-            html.Div(
                 className='three columns',
                 style={
                     'min-width': '24.5%',
@@ -97,11 +89,18 @@ app.layout = html.Div(children=[
                             searchable=False,
                             value=''
                         )
-                    ])
+                    ]),
                 ]
             )
-        ])
-    ])
+        ]),
+        html.Div(
+            id='div-graphs',
+            children=dcc.Graph(
+                id='graph',
+                style={'display': 'none'}
+            )
+        ),
+    ]),
 ])
 
 # Setting component
